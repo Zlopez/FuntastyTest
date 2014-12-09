@@ -2,19 +2,25 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
+    android:orientation="horizontal"
     android:padding="10dp"
     android:paddingLeft="10dp"
     android:paddingRight="10dp" >
 
-    <!-- login Label -->
+    <!-- image -->
+    <ImageView
+        android:id="@+id/image"
+        android:layout_width="50dip"
+        android:layout_height="50dip" />
 
+    <!-- login Label -->
     <TextView
         android:id="@+id/login"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:paddingBottom="2dip"
         android:paddingTop="6dip"
+        android:paddingLeft="6dip"
         android:textColor="#43bd00"
         android:textSize="16sp"
         android:textStyle="bold" />

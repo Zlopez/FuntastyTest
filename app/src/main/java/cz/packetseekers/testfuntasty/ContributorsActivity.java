@@ -2,12 +2,21 @@ package cz.packetseekers.testfuntasty;
 
 import android.app.ListActivity;
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -16,6 +25,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -27,21 +40,21 @@ public class ContributorsActivity extends ListActivity {
     private static final String url = "https://api.github.com/repos/torvalds/linux/contributors";
 
     // JSON node names
-    private static final String TAG_LOGIN = "login";
-    private static final String TAG_ID = "id";
-    private static final String TAG_AVATAR_URL = "avatar_url";
-    private static final String TAG_URL = "url";
+    public static final String TAG_LOGIN = "login";
+    public static final String TAG_ID = "id";
+    public static final String TAG_AVATAR_URL = "avatar_url";
+    public static final String TAG_URL = "html_url";
 
     JSONArray contributors = null;
 
-    ArrayList<HashMap<String, String>> contributorsList;
+    ArrayList<HashMap<String, Object>> contributorsList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_contributors);
 
-        contributorsList = new ArrayList<HashMap<String, String>>();
+        contributorsList = new ArrayList<HashMap<String, Object>>();
 
         ListView lv = getListView();
 
@@ -109,17 +122,31 @@ public class ContributorsActivity extends ListActivity {
                         String avatarUrl = contributorJSONObject.getString(TAG_AVATAR_URL);
                         String url = contributorJSONObject.getString(TAG_URL);
 
-                        HashMap<String, String> contributor = new HashMap<String, String>();
+                        HashMap<String, Object> contributor = new HashMap<String, Object>();
 
                         contributor.put(TAG_ID, id);
                         contributor.put(TAG_LOGIN, login);
-                        contributor.put(TAG_AVATAR_URL, avatarUrl);
                         contributor.put(TAG_URL, url);
+
+                        //load image from url
+                        InputStream in = new URL(avatarUrl).openStream();
+                        Bitmap avatar = BitmapFactory.decodeStream(in);
+
+                        contributor.put(TAG_AVATAR_URL, avatar);
+
 
                         contributorsList.add(contributor);
                     }
                 }
                 catch(JSONException e)
+                {
+                    e.printStackTrace();
+                }
+                catch(MalformedURLException e)
+                {
+                    e.printStackTrace();
+                }
+                catch(IOException e)
                 {
                     e.printStackTrace();
                 }
@@ -140,12 +167,22 @@ public class ContributorsActivity extends ListActivity {
             }
 
             // show data in listView
-            ListAdapter adapter = new SimpleAdapter(
-                    ContributorsActivity.this, contributorsList, R.layout.list_item,
-                    new String[]{TAG_LOGIN},new int[] {R.id.login}
+            ListAdapter adapter = new ContributorsAdapter(
+                    ContributorsActivity.this, contributorsList
             );
 
             setListAdapter(adapter);
         }
+    }
+
+    @Override
+    protected void onListItemClick(ListView l, View v, int position, long id) {
+        super.onListItemClick(l, v, position, id);
+
+        HashMap<String,Object> item = (HashMap<String,Object>)this.getListAdapter().getItem(position);
+
+        Uri uri = Uri.parse(item.get(TAG_URL).toString());
+        Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+        startActivity(intent);
     }
 }
